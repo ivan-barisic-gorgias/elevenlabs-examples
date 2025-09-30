@@ -61,7 +61,18 @@ async def handle_media_stream(websocket: WebSocket):
         async for message in websocket.iter_text():
             if not message:
                 continue
-            await audio_interface.handle_twilio_message(json.loads(message))
+            try:
+                await audio_interface.handle_twilio_message(json.loads(message))
+            except Exception as e:
+                print(f"Error handling Twilio message: {type(e).__name__}: {e}")
+                print(f"Message content: {message}")
+                print("Attempting retry...")
+                try:
+                    await audio_interface.handle_twilio_message(json.loads(message))
+                    print("Retry successful")
+                except Exception as retry_e:
+                    print(f"Retry failed: {type(retry_e).__name__}: {retry_e}")
+                    traceback.print_exc()
 
     except WebSocketDisconnect:
         print("WebSocket disconnected")
