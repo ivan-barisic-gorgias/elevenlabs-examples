@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  elevenlabs-twilio:
+    build: .
+    ports:
+      - "8010:8010"
+    env_file:
+      - .env
+    restart: unless-stopped

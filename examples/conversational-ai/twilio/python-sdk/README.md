@@ -34,7 +34,7 @@
 To start the application, run the following command:
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn main:app --host 0.0.0.0 --port 8010 --workers 4
 ```
 
 In your code, ensure that the `requires_auth` parameter is set correctly in the `Conversation` instantiation. It should have the same value as the settings of your agent.
@@ -42,7 +42,7 @@ In your code, ensure that the `requires_auth` parameter is set correctly in the 
 ### Tunneling through ngrok
 
 ```bash
-ngrok http 8000
+ngrok http 8010
 ```
 
 - Set webhook: https://<ngrok-url>/twilio/inbound_call

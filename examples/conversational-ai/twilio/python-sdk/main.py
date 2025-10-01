@@ -9,6 +9,7 @@ from elevenlabs import ElevenLabs
 from elevenlabs.conversational_ai.conversation import Conversation
 from twilio_audio_interface import TwilioAudioInterface
 from starlette.websockets import WebSocketDisconnect
+from function_handlers import handle_function_call
 
 load_dotenv()
 
@@ -21,6 +22,44 @@ app = FastAPI()
 @app.get("/")
 async def root():
     return {"message": "Twilio-ElevenLabs Integration Server"}
+
+
+@app.post("/tools/{tool_name}")
+async def handle_tool_call(tool_name: str, request: Request):
+    """
+    Handle tool/function calls from ElevenLabs agent.
+    Tool name is provided as a path parameter, arguments in request body.
+    """
+    try:
+        # Get arguments from request body
+        request_body = await request.json()
+
+        print(f"[ELEVENLABS TOOL] Received tool call: {tool_name}")
+        print(f"[ELEVENLABS TOOL] Request headers: {dict(request.headers)}")
+        print(f"[ELEVENLABS TOOL] Request body: {request_body}")
+        print(f"[ELEVENLABS TOOL] Parameters extracted:")
+        for key, value in request_body.items():
+            print(f"[ELEVENLABS TOOL]   {key}: {value}")
+
+        # Handle the function call
+        result, error = handle_function_call(tool_name, request_body)
+
+        if result is not None:
+            print(f"[ELEVENLABS TOOL] Success - Tool {tool_name} returned: {result}")
+            return result
+        else:
+            print(f"[ELEVENLABS TOOL] Error - Tool {tool_name} failed: {error}")
+            return {"success": False, "error": error}
+
+    except json.JSONDecodeError as e:
+        error_msg = f"Invalid JSON in request body: {e}"
+        print(f"[ELEVENLABS TOOL] JSON Error for {tool_name}: {error_msg}")
+        return {"success": False, "error": error_msg}
+    except Exception as e:
+        error_msg = f"Unexpected error in tool endpoint: {e}"
+        print(f"[ELEVENLABS TOOL] Exception for {tool_name}: {error_msg}")
+        traceback.print_exc()
+        return {"success": False, "error": error_msg}
 
 
 @app.post("/twilio/inbound_call")
@@ -91,4 +130,4 @@ async def handle_media_stream(websocket: WebSocket):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8010)
